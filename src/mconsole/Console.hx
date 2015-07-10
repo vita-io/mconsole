@@ -1,22 +1,22 @@
 /*
 Copyright (c) 2012 Massive Interactive
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of 
-this software and associated documentation files (the "Software"), to deal in 
-the Software without restriction, including without limitation the rights to 
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies 
-of the Software, and to permit persons to whom the Software is furnished to do 
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
 so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all 
+The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
@@ -35,10 +35,10 @@ private typedef StringMap<T> = Hash<T>;
 #end
 
 /**
-	This console implementation assumes the availability of the WebKit console. 
-	We inline calls to the native API rather than simply creating an extern so 
-	we can add additional console methods (such as enterDebugger). This also 
-	means we can convert some Haxe structures (XML for example) into something 
+	This console implementation assumes the availability of the WebKit console.
+	We inline calls to the native API rather than simply creating an extern so
+	we can add additional console methods (such as enterDebugger). This also
+	means we can convert some Haxe structures (XML for example) into something
 	more readable in the console.
 
 	In flash, we call the WebKit console API through ExternalInterface.
@@ -75,7 +75,7 @@ class Console
 	/**
 		The default console printer.
 	**/
-	public static var defaultPrinter = 
+	public static var defaultPrinter =
 
 	#if (cpp && nme)
 		new LogPrinter(haxe.Log.trace);
@@ -92,9 +92,9 @@ class Console
 	**/
 
 	static var printers:Array<Printer> = cast [defaultPrinter];
-	
+
 	/**
-		The current group depth, incremented when group(name) is called, and 
+		The current group depth, incremented when group(name) is called, and
 		decremented when groupEnd() is called.
 	**/
 	static var groupDepth = 0;
@@ -110,7 +110,7 @@ class Console
 	static var counts = new StringMap<Int>();
 
 	/**
-		The previous value of haxe.Log.trace if redirectTraces has been called, 
+		The previous value of haxe.Log.trace if redirectTraces has been called,
 		or null if it has not.
 	**/
 	static var previousTrace:Dynamic;
@@ -121,12 +121,12 @@ class Console
 	static var running = false;
 
 	#if flash
-	
+
 	/**
-		Magic: The only way to get Haxe XML objects to print nicely in the 
+		Magic: The only way to get Haxe XML objects to print nicely in the
 		WebKit console is if they are HTMLDom objects. So we log XML as:
 			{__xml__:true, xml:xml.toString()}
-		We call this "bridge" function via external interface, which checks for 
+		We call this "bridge" function via external interface, which checks for
 		__xml__ == true, and parses XML into a DOM using a DOMParser if it is.
 	**/
 	static var BRIDGE = "__mconsole__";
@@ -134,7 +134,7 @@ class Console
 	/**
 		Eval'd to create the bridge.
 	**/
-	static var CREATE_BRIDGE_SCRIPT = BRIDGE + 
+	static var CREATE_BRIDGE_SCRIPT = BRIDGE +
 " = function() {
   var args = [];
   for (var i = 1; i < arguments.length; i++) {
@@ -143,20 +143,20 @@ class Console
   }
   console[arguments[0]].apply(console, args);
 }";
-	
+
 	/**
 		Eval'd to remove the bridge.
 	**/
 	static var REMOVE_BRIDGE_SCRIPT = "delete window." + BRIDGE;
 	#end
-	
+
 
 	/**
-		Starts the console, redirecting haxe.Log.trace and adding a default 
+		Starts the console, redirecting haxe.Log.trace and adding a default
 		printer if WebKit is not available.
 
-		The trace method accepts a variable number of arguments which are 
-		passed to the console. If the first argument is a string that matches a 
+		The trace method accepts a variable number of arguments which are
+		passed to the console. If the first argument is a string that matches a
 		log level (log, info, warn...) then the trace is logged at that level.
 	**/
 	public static function start()
@@ -230,7 +230,7 @@ class Console
 	}
 
 	/**
-		The method called by Haxe trace. Checks if the first parameter matches 
+		The method called by Haxe trace. Checks if the first parameter matches
 		a log level, and forwards the log to the appropriate handler.
 	**/
 	static function haxeTrace(value:Dynamic, ?pos:PosInfos)
@@ -238,7 +238,7 @@ class Console
 		var params = pos.customParams;
 		if (params == null) params = [];
 		else pos.customParams = null;
-		
+
 		var level = switch (value)
 		{
 			case "log": LogLevel.log;
@@ -251,7 +251,7 @@ class Console
 				LogLevel.log;
 		}
 
-		if (hasConsole) callConsole(Std.string(level), params);
+		if (hasConsole) callConsole(Std.string(level), params, pos);
 		print(level, params, pos);
 	}
 
@@ -268,7 +268,7 @@ class Console
 	**/
 	inline public static function log(message:Dynamic, ?pos:PosInfos):Void
 	{
-		if (hasConsole) callConsole("log", [message]);
+		if (hasConsole) callConsole("log", [message], pos);
 		print(LogLevel.log, [message], pos);
 	}
 
@@ -277,7 +277,7 @@ class Console
 	**/
 	inline public static function info(message:Dynamic, ?pos:PosInfos):Void
 	{
-		if (hasConsole) callConsole("info", [message]);
+		if (hasConsole) callConsole("info", [message], pos);
 		print(LogLevel.info, [message], pos);
 	}
 
@@ -286,7 +286,7 @@ class Console
 	**/
 	inline public static function debug(message:Dynamic, ?pos:PosInfos):Void
 	{
-		if (hasConsole) callConsole("debug", [message]);
+		if (hasConsole) callConsole("debug", [message], pos);
 		print(LogLevel.debug, [message], pos);
 	}
 
@@ -295,7 +295,7 @@ class Console
 	**/
 	inline public static function warn(message:Dynamic, ?pos:PosInfos):Void
 	{
-		if (hasConsole) callConsole("warn", [message]);
+		if (hasConsole) callConsole("warn", [message], pos);
 		print(LogLevel.warn, [message], pos);
 	}
 
@@ -322,10 +322,10 @@ class Console
 		if (hasConsole)
 		{
 			#if js
-			callConsole("error", [message]);
+			callConsole("error", [message], pos);
 			#elseif flash
 			// can't send flash stack trace to WebKit, so warn instead
-			callConsole("warn", ["Error: " + message + stackTrace]);
+			callConsole("warn", ["Error: " + message + stackTrace], pos);
 			#end
 		}
 
@@ -333,9 +333,9 @@ class Console
 	}
 
 	/**
-		Logs a stack trace at the moment the function is called. The stack 
-		trace lists the functions on the call stack (functions that have been 
-		called and have not yet finished executing and returned) and the values 
+		Logs a stack trace at the moment the function is called. The stack
+		trace lists the functions on the call stack (functions that have been
+		called and have not yet finished executing and returned) and the values
 		of any arguments passed to those functions.
 	**/
 	inline public static function trace(?pos:PosInfos):Void
@@ -343,11 +343,11 @@ class Console
 		if (hasConsole)
 		{
 			#if js
-			callConsole("trace", []);
+			callConsole("trace", [], pos);
 			#elseif flash
 			// can't send flash stack trace to WebKit, so info instead
 			var stack = StackHelper.toString(CallStack.callStack());
-			callConsole("info", ["Stack trace:\n" + stack]);
+			callConsole("info", ["Stack trace:\n" + stack], pos);
 			#end
 		}
 
@@ -360,7 +360,7 @@ class Console
 	**/
 	inline public static function assert(expression:Bool, message:Dynamic, ?pos:PosInfos):Void
 	{
-		if (hasConsole) callConsole("assert", [expression, message]);
+		if (hasConsole) callConsole("assert", [expression, message], pos);
 
 		if (!expression)
 		{
@@ -371,12 +371,12 @@ class Console
 	}
 
 	/**
-		Logs the number of times this line of code has executed, and an 
+		Logs the number of times this line of code has executed, and an
 		optional title.
 	**/
 	inline public static function count(title:String, ?pos:PosInfos):Void
 	{
-		if (hasConsole) callConsole("count", [title]);
+		if (hasConsole) callConsole("count", [title], pos);
 
 		var position = pos.fileName + ":" + pos.lineNumber;
 		var count = (counts.exists(position) ? counts.get(position) + 1 : 1);
@@ -385,12 +385,12 @@ class Console
 	}
 
 	/**
-		Logs the message object and begins an indented block for further 
+		Logs the message object and begins an indented block for further
 		log entries.
 	**/
 	inline public static function group(message:Dynamic, ?pos:PosInfos):Void
 	{
-		if (hasConsole) callConsole("group", [message]);
+		if (hasConsole) callConsole("group", [message], pos);
 
 		print(LogLevel.log, [message], pos);
 		groupDepth += 1;
@@ -401,7 +401,7 @@ class Console
 	**/
 	inline public static function groupEnd(?pos:PosInfos):Void
 	{
-		if (hasConsole) callConsole("groupEnd", []);
+		if (hasConsole) callConsole("groupEnd", [], pos);
 		if (groupDepth > 0) groupDepth -= 1;
 	}
 
@@ -410,7 +410,7 @@ class Console
 	**/
 	inline public static function time(name:String, ?pos:PosInfos):Void
 	{
-		if (hasConsole) callConsole("time", [name]);
+		if (hasConsole) callConsole("time", [name], pos);
 		// Use Sys.time() in macros, see: https://github.com/haxenme/NME/issues/21
 		times.set(name, #if macro Sys.time() #else haxe.Timer.stamp() #end);
 	}
@@ -420,8 +420,8 @@ class Console
 	**/
 	inline public static function timeEnd(name:String, ?pos:PosInfos):Void
 	{
-		if (hasConsole) callConsole("timeEnd", [name]);
-		
+		if (hasConsole) callConsole("timeEnd", [name], pos);
+
 		if (times.exists(name))
 		{
 			// Use Sys.time() in macros, see: https://github.com/haxenme/NME/issues/21
@@ -431,40 +431,40 @@ class Console
 	}
 
 	/**
-		Adds a label to the timeline view marking when the point when the 
+		Adds a label to the timeline view marking when the point when the
 		method was called.
 	**/
 	inline public static function markTimeline(label:String, ?pos:PosInfos):Void
 	{
-		if (hasConsole) callConsole("markTimeline", [label]);
+		if (hasConsole) callConsole("markTimeline", [label], pos);
 
 		// TODO: native implementation
 	}
 
 	/**
-		Begins profiling JavaScript—tracking the number of times each function 
-		is called, the time spent in that function, and the time spent in 
-		nested groups of functions. If a title is provided, the profile is 
+		Begins profiling JavaScript—tracking the number of times each function
+		is called, the time spent in that function, and the time spent in
+		nested groups of functions. If a title is provided, the profile is
 		named.
 	*/
 	inline public static function profile(?title:String, ?pos:PosInfos):Void
 	{
 		#if js
-		if (hasConsole) callConsole("profile", [title]);
+		if (hasConsole) callConsole("profile", [title], pos);
 		#end
 
 		// not currently supported outside of JS/WebKit
 	}
 
 	/**
-		Ends one or more JavaScript profiles. If a title is provided and a 
-		running profile has a matching title, only the current run of that 
+		Ends one or more JavaScript profiles. If a title is provided and a
+		running profile has a matching title, only the current run of that
 		profile is ended. Otherwise, the current run of all profiles is ended.
 	*/
 	inline public static function profileEnd(?title:String, ?pos:PosInfos):Void
 	{
 		#if js
-		if (hasConsole) callConsole("profileEnd", [title]);
+		if (hasConsole) callConsole("profileEnd", [title], pos);
 		#end
 
 		// not currently supported outside of JS/WebKit
@@ -495,11 +495,11 @@ class Console
 	static var hasConsole = detectConsole();
 
 	/**
-		Detects if the WebKit console API is available, either natively in 
+		Detects if the WebKit console API is available, either natively in
 		JavaScript or via ExternalConnection in Flash.
 	**/
 	static function detectConsole():Bool
-	{ 
+	{
 		#if (js && samsung && !browser)
 		return false;
 		#elseif (js && !nodejs)
@@ -514,22 +514,24 @@ class Console
 	}
 
 	/**
-		Calls a method on the WebKit console API, either directly in JS or via 
+		Calls a method on the WebKit console API, either directly in JS or via
 		ExternalInterface in Flash running in a WebKit browser.
 	**/
-	inline static function callConsole(method:String, params:Array<Dynamic>)
+	inline static function callConsole(method:String, params:Array<Dynamic>, ?pos:PosInfos)
 	{
 		#if (js && !nodejs)
 		if (untyped console[method] != null)
 		{
 			if (method == "log" && Std.is(params[0], Xml)) method = dirxml;
-			
+			var values = mconsole.Console.toConsoleValues(params);
+			values.unshift(pos.fileName+":"+pos.lineNumber);
+
 			if (untyped console[method].apply != null)
-				untyped console[method].apply(console, mconsole.Console.toConsoleValues(params));
+				untyped console[method].apply(console, values);
 			else if (untyped Function.prototype.bind != null)
-				untyped Function.prototype.bind.call(console[method], console).apply(console, mconsole.Console.toConsoleValues(params));
+				untyped Function.prototype.bind.call(console[method], console).apply(console, values);
 		}
-			
+
 		#elseif flash
 		params = params.copy();
 		params.unshift(method);
@@ -539,7 +541,7 @@ class Console
 	}
 
 	/**
-		Convert parameters for console methods into 'native' objects that will 
+		Convert parameters for console methods into 'native' objects that will
 		print.
 	**/
 	static function toConsoleValues(params:Array<Dynamic>):Array<Dynamic>
@@ -549,7 +551,7 @@ class Console
 	}
 
 	/**
-		Converts a value into the anything that will print nicely in the 
+		Converts a value into the anything that will print nicely in the
 		console.
 	**/
 	static function toConsoleValue(value:Dynamic):Dynamic
@@ -622,7 +624,7 @@ class Console
 					return native;
 				default:
 			}
-			
+
 			if (typeName == "Array" || typeName == "List" || typeName == "haxe.FastList")
 			{
 				var native = [];
@@ -631,7 +633,7 @@ class Console
 				return native;
 			}
 		}
-		
+
 		return value;
 	}
 
