@@ -525,7 +525,7 @@ class Console
 			if (method == "log" && Std.is(params[0], Xml)) method = dirxml;
 			var values = mconsole.Console.toConsoleValues(params);
 			var className = pos.className.split(".").pop();
-			values.unshift(pos.fileName+":"+pos.lineNumber+"("+className+"."+pos.methodName+")");
+			values.push({"@": (pos.fileName+":"+pos.lineNumber), "#": "("+className+"."+pos.methodName+")"});
 
 			if (untyped console[method].apply != null)
 				untyped console[method].apply(console, values);
